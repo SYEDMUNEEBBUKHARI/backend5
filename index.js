@@ -1,7 +1,11 @@
+const http = require("http");
+const socketIo = require("socket.io");
  const express=require('express');
  const cors=require('cors');
  const bodyParser=require('body-parser');
- const app= express();
+ const appp= express();
+ const app = http.createServer(appp);
+const io = socketIo(app);
  const Register= require('./Register.model');
  const RegisterRoute=express.Router();
  const bcrypt= require('bcryptjs');
@@ -14,8 +18,8 @@ const jwt= require("jsonwebtoken");
 
 dotenv.config();
 
- app.use(cors());
- app.use(bodyParser.json());
+ appp.use(cors());
+ appp.use(bodyParser.json());
 mongoose.connect("mongodb://localhost:27017/Register",{useUnifiedTopology:true , useNewUrlParser: true});
 const connection= mongoose.connection;
 connection.once("open",()=>{
@@ -134,7 +138,9 @@ const token= jwt.sign({_id: email._id},process.env.Token_Secret);
 res.header('auth-token',token).send({token: token,
 Email: email.Email,
 ipfsHash: email.ipfsHash,
-Name: email.Name});
+Name: email.Name,
+Count: count
+});
 
 
 });
@@ -185,7 +191,40 @@ Registerdata.save().then(Registerdata =>{res.json("Registerdata updated")})
 
 
 
-app.use('/register', RegisterRoute)
+appp.use('/register', RegisterRoute)
+
+
+let count=0;
+
+
+
+
+io.on("connection", socket => {
+    console.log("New client connected");
+count=count+1;
+
+    //Here we listen on a new namespace called "incoming data"
+    socket.on("incoming data", (data)=>{
+        //Here we broadcast it out to all other sockets EXCLUDING the socket which sent us the data
+       socket.broadcast.emit("outgoing data", {num: data});
+    });
+
+    //A special namespace "disconnect" for when a client disconnects
+    socket.on("disconnect", () => console.log("Client disconnected"));
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
