@@ -70,5 +70,27 @@ const loginValidation=(data)=>{
 
 
 
+
+    const NotificationValidation=(data)=>{
+        const schema = Joi.object({
+         FromUser: Joi.string()
+         .min(6)
+         .required(),
+         ToUser: Joi.string()
+         .min(6)
+         .required()
+         ,
+         LandId: Joi.string()
+         .min(6)
+         .required()
+
+            
+        
+        });
+       return schema.validate(data);
+        }
+
+
 module.exports.registerValidation=registerValidation;
 module.exports.loginValidation=loginValidation;
+module.exports.NotificationValidation=NotificationValidation;
