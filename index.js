@@ -8,6 +8,8 @@ const app = http.createServer(appp);
 const io = socketIo(app);
 const RegisterModel = require("./Register.model");
 const Notification = require("./Notification.model");
+const Landdatamodel = require("./Landdata.model");
+const PunjabLanddatamodel = require("./PunjabLanddata.model");
 const RegisterRoute = express.Router();
 const bcrypt = require("bcryptjs");
 const PORT = 5000;
@@ -17,8 +19,12 @@ const {
   registerValidation,
   loginValidation,
   NotificationValidation,
+  LanddataValidation,
+  PunjabLanddataValidation,
+
 } = require("./validation");
 const jwt = require("jsonwebtoken");
+const LanddataModel = require("./Landdata.model");
 
 dotenv.config();
 RegisterRoute.all("*", cors());
@@ -45,8 +51,53 @@ connection.once("open", () => {
 // }))})
 
 RegisterRoute.route("/fetch").get((req, res) => {
-  console.log("called by someone parent", req.params.id);
+  console.log("called by someone parent", req.params);
   res.send("okey will");
+});
+
+RegisterRoute.route("/fetchdataLandTobe").get((req, res) => {
+  console.log("called by someone parent", req.query.id);
+
+  const data = Landdatamodel.find().then((data) => {
+    console.log("da", data);
+    res.send(data);
+  });
+
+
+
+
+
+
+
+});
+
+
+RegisterRoute.route("/VerifytheLand").get((req, res) => {
+  console.log("verify the Land", req.query.id);
+  console.log("verify the Land", req.query.cnic);
+
+
+  const data = PunjabLanddatamodel.find({
+    Cnic: req.query.cnic,
+    SerialNo: req.query.id
+  }).then((data) => {
+    console.log("da", data);
+    res.send(data);
+    if (data.length !== 0) {
+      console.log("verify");
+      res.send(data);
+    }
+    else {
+      res.send(data);
+    }
+  });
+
+
+  console.log("ver data", data);
+
+
+
+
 });
 
 // appp.get('/:id', cors(), function (req, res, next) {
@@ -62,6 +113,48 @@ RegisterRoute.route("/fetch").get((req, res) => {
 //         res.json(RegisterNotification);
 //     }))
 // });
+
+RegisterRoute.route("/sendlandtocity").post(async (req, res) => {
+  const { error } = LanddataValidation(req.body);
+  if (error) {
+    res.status(400).send(error.details[0].message);
+  }
+  console.log("Land data sheet", req.body.City);
+  console.log("Land data sheet", req.body.Name);
+  console.log("Land data sheet", req.body.Cnic);
+
+
+  // const email = await Landdatamodel.findOne({ SerialNo: req.body.SerialNo });
+  console.log("1");
+
+  // if (email) return res.status(400).send("Record already exist");
+  console.log("2");
+
+  let Landdatamake = new Landdatamodel({
+    Name: req.body.Name,
+    Cnic: req.body.Cnic,
+
+    Metamaskid: req.body.Metamaskid,
+    City: req.body.City,
+    StreetNo: req.body.StreetNo,
+    Postcode: req.body.Postcode,
+    SerialNo: req.body.SerialNo,
+    Province: req.body.Province,
+    LandNo: req.body.LandNo,
+    Country: req.body.Country,
+    LandArea: req.body.LandArea,
+    LandLocation: req.body.LandLocation,
+  });
+
+  Landdatamake.save()
+    .then((Landdatamake) => {
+      res.status(200).json({ Landdatamake: "Saved Land data" });
+    })
+    .catch((err) => {
+      res.status(400).json({ err: "Land data failed" });
+    });
+
+});
 
 RegisterRoute.route("/add").post(async (req, res) => {
   console.log(" add the data");
@@ -158,6 +251,54 @@ RegisterRoute.route("/login").post(async (req, res) => {
     Name: email.Name,
     Count: count,
   });
+});
+
+
+
+RegisterRoute.route("/PunjabLand").post(async (req, res) => {
+  console.log(" Punjab data");
+
+  const { error } = PunjabLanddataValidation(req.query);
+  if (error) {
+    res.status(400).send(error.details[0].message);
+  }
+  console.log("Punjab body", req.query);
+  const SerialN = await PunjabLanddatamodel.findOne({ SerialNo: req.body.SerialNo });
+  console.log("1");
+
+  if (SerialN) return res.status(400).send("Record already exist");
+  console.log("2");
+
+
+
+  let PunjabLanddata = new PunjabLanddatamodel({
+    Name: req.query.Name,
+    Cnic: req.query.Cnic,
+
+    City: req.query.City,
+    StreetNo: req.query.StreetNo,
+    Postcode: req.query.Postcode,
+    SerialNo: req.query.SerialNo,
+    Province: req.query.Province,
+    LandNo: req.query.LandNo,
+    Country: req.query.Country,
+    LandArea: req.query.LandArea,
+    LandLocation: req.query.LandLocation,
+
+
+
+
+
+  });
+  console.log("3");
+
+  PunjabLanddata.save()
+    .then((PunjabLanddata) => {
+      res.status(200).json({ PunjabLanddata: "Punjab Registerdata added successfully" });
+    })
+    .catch((err) => {
+      res.status(200).json({ err: " Punjab Registeration failed" });
+    });
 });
 
 // RegisterRoute.route('/update/:id').post((req , res)=>{
