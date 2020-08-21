@@ -50,9 +50,14 @@ connection.once("open", () => {
 
 // }))})
 
-RegisterRoute.route("/fetch").get((req, res) => {
-  console.log("called by someone parent", req.params);
-  res.send("okey will");
+RegisterRoute.route("/fetch").get(async (req, res) => {
+
+
+  const Not = await Notification.find({}).sort({ _id: -1 });
+  console.log("Not", Not);
+  if (Not) {
+    res.send(Not);
+  }
 });
 
 RegisterRoute.route("/fetchdataLandTobe").get((req, res) => {
@@ -72,28 +77,49 @@ RegisterRoute.route("/fetchdataLandTobe").get((req, res) => {
 });
 
 
-RegisterRoute.route("/VerifytheLand").get((req, res) => {
-  console.log("verify the Land", req.query.id);
-  console.log("verify the Land", req.query.cnic);
+RegisterRoute.route("/deleteLand").get(async (req, res) => {
+  const del = await Landdatamodel.findByIdAndDelete({ _id: req.query.id });
+  console.log("Delete", del._id);
+  res.status(200).send(del);
+});
 
 
-  const data = PunjabLanddatamodel.find({
-    Cnic: req.query.cnic,
-    SerialNo: req.query.id
-  }).then((data) => {
-    console.log("da", data);
-    res.send(data);
-    if (data.length !== 0) {
-      console.log("verify");
-      res.send(data);
-    }
-    else {
-      res.send(data);
-    }
-  });
 
 
-  console.log("ver data", data);
+
+
+
+
+RegisterRoute.route("/VerifytheLand").get(async (req, res) => {
+  console.log("verify the Land id", req.query.serial);
+  console.log("verify the Land cnic", req.query.cnic);
+  console.log("verify the Land Name", req.query.Name);
+
+
+
+  // const data = await PunjabLanddatamodel.find({ Name: req.query.Name }).then((data) => {
+  //   console.log("daP", data);
+
+  const email = await PunjabLanddatamodel.find({ SerialNo: req.query.serial, Cnic: req.query.cnic, Name: req.query.Name });
+
+
+  if (email) {
+    console.log("email res", email);
+
+
+    return res.status(200).send(email);
+  }
+
+  else {
+    console.log("not have");
+    res.status(400).send(email);
+  }
+
+
+  // });
+
+
+
 
 
 
@@ -146,12 +172,28 @@ RegisterRoute.route("/sendlandtocity").post(async (req, res) => {
     LandLocation: req.body.LandLocation,
   });
 
+  // Landdatamake.save()
+  //   .then((Landdatamake) => {
+  //     res.sendStatus(200).json({ Landdatamake: "Saved Land data" });
+  //   })
+  //   .catch((err) => {
+  //     res
+  //       .sendStatus(450)
+  //       .send({ "adding new Land failed": "failed" });
+  //   });
+
   Landdatamake.save()
     .then((Landdatamake) => {
-      res.status(200).json({ Landdatamake: "Saved Land data" });
+      // res.json({
+      //   Landdatamake: "RegisterNotification added successfully",
+      // });
     })
     .catch((err) => {
-      res.status(400).json({ err: "Land data failed" });
+      if (err) {
+        res.send({
+          Landdatamake: "error not add",
+        });
+      }
     });
 
 });
